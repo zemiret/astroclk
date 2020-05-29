@@ -2,9 +2,6 @@ let scene;
 let renderer;
 let camera;
 
-const DP1_TEETH_HEIGHT = 0.7;
-const PRESSURE_ANGLE = Math.PI / 12;
-
 function init() {
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
 	scene = new THREE.Scene();
@@ -41,109 +38,90 @@ function init() {
 	document.body.appendChild( renderer.domElement );
 }
 
-function createGear(teethCount, diametralPitch) {
-	const x = 0, y = 0;
-	const pitchDiameter = teethCount / diametralPitch;
-	const midRadius = pitchDiameter / 2;
-
-	const teethHeight = DP1_TEETH_HEIGHT * diametralPitch; 
-	const halfTeethHeight = teethHeight / 2;
-
-	const innerRadius = midRadius - halfTeethHeight; 
-	const outerRadius = midRadius + halfTeethHeight;
-
-	const theta = 2 * Math.PI / teethCount;
-
+function createMesh(cog) {
 	const shape = new THREE.Shape();
-	shape.moveTo(innerRadius, 0);
+	shape.moveTo(cog.innerRadius, 0);
 
-	for(let i = 0; i < teethCount; ++i) {
-		const startAlpha = i * theta;
-		const endAlpha = (i + 1) * theta;
+	for(let i = 0; i < cog.teethCount; ++i) {
+		const startAlpha = i * cog.theta;
+		const endAlpha = (i + 1) * cog.theta;
 
 		const teethStartAlpha = startAlpha;
-		const teethMiddleAlpha = startAlpha + theta / 4;
-		const teethEndAlpha = endAlpha - theta / 2;
+		const teethMiddleAlpha = startAlpha + cog.theta / 4;
+		const teethEndAlpha = startAlpha + cog.theta / 2;
 
-		const teethStartPoint = new Point(
-				innerRadius * Math.cos(teethStartAlpha),
-				innerRadius * Math.sin(teethStartAlpha),
-			);
-
-		const teethMidPoint = new Point(
-				(midRadius + (teethHeight * 0.9)) * Math.cos(teethMiddleAlpha),
-				(midRadius + (teethHeight * 0.9)) * Math.sin(teethMiddleAlpha),
-			);
-
-		const teethEndPoint = new Point(
-				innerRadius * Math.cos(teethEndAlpha),
-				innerRadius * Math.sin(teethEndAlpha),
-			);
-
-		const endPoint = new Point(
-			innerRadius * Math.cos(endAlpha),
-			innerRadius * Math.sin(endAlpha)
+		const teethP2 = new Point(
+			cog.midRadius * Math.cos(teethStartAlpha),
+			cog.midRadius * Math.sin(teethStartAlpha),
 		);
 
-		const dirVector = new Vector(
-			teethMidPoint.x - x,
-			teethMidPoint.y - y,
-		).normalize().mul(teethHeight / 2);
+		const teethP3 = new Point(
+			(cog.midRadius + (cog.teethHeight * 0.9)) * Math.cos(teethMiddleAlpha),
+			(cog.midRadius + (cog.teethHeight * 0.9)) * Math.sin(teethMiddleAlpha),
+		);
 
+		const teethP4 = new Point(
+			cog.midRadius * Math.cos(teethEndAlpha),
+			cog.midRadius * Math.sin(teethEndAlpha),
+		);
 
-		const teethP1 = new Point(
-				(midRadius) * Math.cos(teethStartAlpha),
-				(midRadius) * Math.sin(teethStartAlpha),
-			);
-		const teethP2 = new Point(
-				(midRadius) * Math.cos(teethEndAlpha),
-				(midRadius) * Math.sin(teethEndAlpha),
-			);
-		
+		const teethP5 = new Point(
+			cog.innerRadius * Math.cos(teethEndAlpha),
+			cog.innerRadius * Math.sin(teethEndAlpha),
+		);
 
-		shape.lineTo(teethP1.x, teethP1.y);
-//		shape.lineTo(teethP1.x, teethP1.y);
-		shape.quadraticCurveTo(teethMidPoint.x, teethMidPoint.y, teethP2.x, teethP2.y);
-//		shape.lineTo(teethP2.x, teethP2.y);
-//		shape.lineTo();
-		shape.lineTo(teethEndPoint.x, teethEndPoint.y);
+		const endPoint = new Point(
+			cog.innerRadius * Math.cos(endAlpha),
+			cog.innerRadius * Math.sin(endAlpha)
+		);
+
+		shape.lineTo(teethP2.x, teethP2.y);
+		shape.quadraticCurveTo(teethP3.x, teethP3.y, teethP4.x, teethP4.y);
+		shape.lineTo(teethP5.x, teethP5.y);
 		shape.lineTo(endPoint.x, endPoint.y);
 	}
-	
-	const extrudeSettings = {
-		steps: 1,
-		depth: 1,
-		bevelEnabled: false,
-	};
 
-	const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+	const geometry = new THREE.ExtrudeGeometry(shape, COG_EXTRUDE_SETTINGS);
 	const material = new THREE.MeshPhongMaterial({
 		color: 0xff0000,
 		flatShading: true,
 	});
 
-	const edges = new THREE.EdgesGeometry( geometry );
-	const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
+	const edges = new THREE.EdgesGeometry(geometry);
+	const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
 
-	const mesh = new THREE.Mesh( geometry, material ) ;
+	const mesh = new THREE.Mesh(geometry, material) ;
 
-	return {mesh, line};
+	cog.mesh = mesh;
+	cog.lineMesh = line;
 }
 
 
 init();
 
-const {mesh, line} = createGear(8, 2);
-mesh.position.x = line.position.x = 10;
-mesh.rotation.z = line.rotation.z = - Math.PI / 16;
+const cog1 = new Cog(16, 2);
+createMesh(cog1);
+scene.add(cog1.mesh);
+scene.add(cog1.lineMesh);
 
-scene.add(mesh);
-scene.add(line);
+//cog1.rotation = { z: 2 * Math.PI / 8 };
 
-const gear2 = createGear(32, 2);
-gear2.mesh.rotation.z = gear2.line.rotation.z = Math.PI / 64;
-scene.add(gear2.mesh);
-scene.add(gear2.line);
+const cog2 = new Cog(8, 2);
+createMesh(cog2);
+scene.add(cog2.mesh);
+scene.add(cog2.lineMesh);
+
+setCogAtAngle(cog1, cog2, 0);
+
+const alpha = 2 * Math.PI / 64;
+
+setCogAtAngle(cog1, cog2, alpha);
+
+const s = alpha * cog1.midRadius;
+const l = 2 * Math.PI * cog2.midRadius;
+const rot = s / l * 2 * Math.PI;
+
+cog2.rotation = { z: rot};
 
 render();
 
