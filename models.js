@@ -6,7 +6,7 @@ class Cog {
 		this.pitchDiameter = this.teethCount / this.diametralPitch;
 		this.midRadius = this.pitchDiameter / 2;
 
-		this.teethHeight = DP1_TEETH_HEIGHT * diametralPitch; 
+		this.teethHeight = DP1_TEETH_HEIGHT / diametralPitch; 
 		this.halfTeethHeight = this.teethHeight / 2;
 
 		this.innerRadius = this.midRadius - this.halfTeethHeight; 
@@ -15,7 +15,67 @@ class Cog {
 		this.theta = 2 * Math.PI / this.teethCount;
 
 		this.mesh = null;
-		this.lineMesh = null;
+
+		this.dependantCogs = [];
+		this.sameRotatorCogs = [];
+	}
+
+	get rotation() {
+		return this.mesh.rotation;
+	}
+
+	get position() {
+		return this.mesh.position;
+	}
+
+	set position(pos) {
+		this.mesh.position = pos;
+	}
+
+	set rotation(rot) {
+		this.mesh.rotation = rot;
+	}
+
+	generateMesh() {
+		return this.mesh.generate();
+	}
+
+	update(rotAngleDelta) {
+		this.rotation = { z: this.rotation.z + rotAngleDelta };
+
+		for(const sameRotatorCog of this.sameRotatorCogs) {
+			sameRotatorCog.update(rotAngleDelta);
+		}
+
+		for(const depenantCog of this.dependantCogs) {
+			const speedup = this.teethCount / depenantCog.teethCount;
+			depenantCog.update(-(speedup * rotAngleDelta));
+		}
+	}
+
+	addDependantCog(cog) {
+		this.dependantCogs.push(cog);
+	}
+
+	addCogSameRotator(cog) {
+		this.sameRotatorCogs.push(cog);
+	}
+}
+
+class CogMesh {
+	constructor(mesh, lineMesh) {
+		this.mesh = mesh;
+		this.lineMesh = lineMesh;
+	}
+
+	generate() {
+		const group = new THREE.Object3D;
+		group.add(this.mesh);
+		if (this.lineMesh) {
+			group.add(this.lineMesh);
+		}
+
+		return group;
 	}
 
 	get rotation() {
@@ -31,9 +91,15 @@ class Cog {
 		pos.y = pos.y || this.mesh.position.y;
 		pos.z = pos.z || this.mesh.position.z;
 
-		this.mesh.position.x = this.lineMesh.position.x = pos.x;
-		this.mesh.position.y = this.lineMesh.position.y = pos.y;
-		this.mesh.position.z = this.lineMesh.position.z = pos.z;
+		this.mesh.position.x = pos.x;
+		this.mesh.position.y = pos.y;
+		this.mesh.position.z = pos.z;
+
+		if (this.lineMesh) {
+			this.lineMesh.position.x = pos.x;
+			this.lineMesh.position.y = pos.y;
+			this.lineMesh.position.z = pos.z;
+		}
 	}
 
 	set rotation(rot) {
@@ -41,9 +107,15 @@ class Cog {
 		rot.y = rot.y || this.mesh.rotation.y;
 		rot.z = rot.z || this.mesh.rotation.z;
 
-		this.mesh.rotation.x = this.lineMesh.rotation.x = rot.x;
-		this.mesh.rotation.y = this.lineMesh.rotation.y = rot.y;
-		this.mesh.rotation.z = this.lineMesh.rotation.z = rot.z;
+		this.mesh.rotation.x = rot.x;
+		this.mesh.rotation.y = rot.y;
+		this.mesh.rotation.z = rot.z;
+
+		if (this.lineMesh) {
+			this.lineMesh.rotation.x = rot.x;
+			this.lineMesh.rotation.y = rot.y;
+			this.lineMesh.rotation.z = rot.z;
+		}
 	}
 }
 

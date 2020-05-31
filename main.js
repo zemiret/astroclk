@@ -6,7 +6,7 @@ function init() {
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
 	scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-	camera.position.z = 25;
+	camera.position.z = 15;
 
 	// create a render and set the size
 	renderer = new THREE.WebGLRenderer();
@@ -92,38 +92,54 @@ function createMesh(cog) {
 
 	const mesh = new THREE.Mesh(geometry, material) ;
 
-	cog.mesh = mesh;
-	cog.lineMesh = line;
+	cog.mesh = new CogMesh(mesh, line);
+}
+
+function addCogWithMesh(teethCount, diametralPitch) {
+	const cog = new Cog(teethCount, diametralPitch);
+	createMesh(cog);
+	scene.add(cog.generateMesh());
+
+	return cog;
 }
 
 
 init();
 
-const cog1 = new Cog(16, 2);
-createMesh(cog1);
-scene.add(cog1.mesh);
-scene.add(cog1.lineMesh);
+//const masterCog = new Cog(16, 2);
+//createMesh(masterCog);
+//scene.add(masterCog.generateMesh());
 
-//cog1.rotation = { z: 2 * Math.PI / 8 };
+const masterCog = addCogWithMesh(16, 2);
 
-const cog2 = new Cog(8, 2);
-createMesh(cog2);
-scene.add(cog2.mesh);
-scene.add(cog2.lineMesh);
+masterCog.rotation = {z: 2 * Math.PI / 64 * 17 / 9 };
 
-setCogAtAngle(cog1, cog2, 0);
+const cog2 = addCogWithMesh(9, 2);
 
-const alpha = 2 * Math.PI / 64;
+setCogAtAngle(masterCog, cog2, 2 * Math.PI / 17 * 13);
 
-setCogAtAngle(cog1, cog2, alpha);
+//cog2.rotation = { z: cog2.rotation.z - Math.PI / 16 };
 
-const s = alpha * cog1.midRadius;
-const l = 2 * Math.PI * cog2.midRadius;
-const rot = s / l * 2 * Math.PI;
 
-cog2.rotation = { z: rot};
+//const sameRotCog = addCogWithMesh(32, 8);
+//const dependantCog = addCogWithMesh(8, 2);
+
+//sameRotCog.position = {z: 1};
+
+//setCogAtAngle(masterCog, dependantCog, 0);
+
+//masterCog.addCogSameRotator(sameRotCog);
+//masterCog.addDependantCog(dependantCog);
 
 render();
+
+const interval = new AdjustingInterval(() => {
+	masterCog.update(-2 * Math.PI / MASTER_INTERVAL_ANGLE_FRAC_UPDATE);
+	render();
+}, UPDATE_INTERVAL);
+
+//interval.start();
+
 
 function render() {
 	// render using requestAnimationFrame
