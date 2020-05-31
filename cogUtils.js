@@ -10,11 +10,34 @@ function setCogAtAngle(cog1, cog2, angle) {
 	compensateDependantCogRotation(cog1, cog2, angle);
 }
 
+/**
+ * Sets cog2 above cog1
+ **/ 
+function setCogAbove(cog1, cog2) {
+	cog2.position = {
+		x: cog1.position.x,
+		y: cog1.position.y,
+		z: cog1.position.z + COG_HEIGHT
+	};
+}
+
+/**
+ * Sets cog2 below cog1
+ **/ 
+function setCogBelow(cog1, cog2) {
+	cog2.position = {
+		x: cog1.position.x,
+		y: cog1.position.y,
+		z: cog1.position.z - COG_HEIGHT
+	};
+}
+
 function setCogPositionAtAngle(cog1, cog2, angle) {
 	Rs = cog1.midRadius + cog2.midRadius;
 	cog2.position = {
 		x: cog1.position.x + Rs * Math.cos(angle),
-		y: cog1.position.y + Rs * Math.sin(angle)
+		y: cog1.position.y + Rs * Math.sin(angle),
+		z: cog1.position.z
 	};
 
 }

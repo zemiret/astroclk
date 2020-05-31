@@ -1,7 +1,8 @@
 const DP1_TEETH_HEIGHT = 2.8;
+const COG_HEIGHT = 1;
 const COG_EXTRUDE_SETTINGS =  {
 	steps: 1,
-	depth: 1,
+	depth: COG_HEIGHT,
 	bevelEnabled: false,
 };
 const UPDATE_INTERVAL = 40; 

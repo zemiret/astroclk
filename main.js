@@ -6,7 +6,7 @@ function init() {
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
 	scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-	camera.position.z = 15;
+	camera.position.z = 25;
 
 	// create a render and set the size
 	renderer = new THREE.WebGLRenderer();
@@ -106,30 +106,41 @@ function addCogWithMesh(teethCount, diametralPitch) {
 
 init();
 
-//const masterCog = new Cog(16, 2);
-//createMesh(masterCog);
-//scene.add(masterCog.generateMesh());
+const masterCog = addCogWithMesh(16, 4);
 
-const masterCog = addCogWithMesh(16, 2);
-
-masterCog.rotation = {z: 2 * Math.PI / 64 * 17 / 9 };
-
-const cog2 = addCogWithMesh(9, 2);
-
-setCogAtAngle(masterCog, cog2, 2 * Math.PI / 17 * 13);
-
-//cog2.rotation = { z: cog2.rotation.z - Math.PI / 16 };
+// TODO: Cog framework working. Great! Next steps:
+// 1. Work on additional elements (planets, dials, make them work smoothly as well)
+// 2. Design normal clock, calendar, and sun+earth+moon
+// 3. textures, nice looks, and nice background
+// 4. Synchronizing clock to the current date
 
 
-//const sameRotCog = addCogWithMesh(32, 8);
-//const dependantCog = addCogWithMesh(8, 2);
+// --- REGULAR CLOCK ---
+const minute8 = addCogWithMesh(8, 4);
+setCogAtAngle(masterCog, minute8, 0);
+masterCog.addDependantCog(minute8);
 
-//sameRotCog.position = {z: 1};
+const minute8master = addCogWithMesh(8, 4);
+setCogAtAngle(minute8, minute8master, 0);
+minute8.addDependantCog(minute8master);
 
-//setCogAtAngle(masterCog, dependantCog, 0);
+const hour48 = addCogWithMesh(48, 4);
+setCogAtAngle(minute8master, hour48, Math.PI / 6);
+minute8master.addDependantCog(hour48);
 
-//masterCog.addCogSameRotator(sameRotCog);
-//masterCog.addDependantCog(dependantCog);
+const hour8 = addCogWithMesh(8, 10);
+setCogBelow(hour48, hour8);
+hour48.addCogSameRotator(hour8);
+
+const hour8prolong = addCogWithMesh(8, 10);
+setCogBelow(hour8, hour8prolong);
+hour8.addCogSameRotator(hour8prolong);
+
+const hour80Master = addCogWithMesh(80, 10);
+setCogAtAngle(hour8prolong, hour80Master, Math.PI);
+hour8prolong.addDependantCog(hour80Master);
+
+// --- REGULAR CLOCK END ---
 
 render();
 
@@ -138,12 +149,13 @@ const interval = new AdjustingInterval(() => {
 	render();
 }, UPDATE_INTERVAL);
 
-//interval.start();
+
+interval.start();
 
 
 function render() {
 	// render using requestAnimationFrame
-	requestAnimationFrame(render);
+//	requestAnimationFrame(render);
 	renderer.render(scene, camera);
 }
 
