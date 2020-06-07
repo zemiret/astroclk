@@ -44,7 +44,11 @@ class Cog {
 		this.rotation = { z: this.rotation.z + rotAngleDelta };
 
 		for(const sameRotatorCog of this.sameRotatorCogs) {
-			sameRotatorCog.update(rotAngleDelta);
+			if(sameRotatorCog.update) {
+				sameRotatorCog.update(rotAngleDelta);
+			} else {
+				sameRotatorCog.rotation.z += rotAngleDelta;
+			}
 		}
 
 		for(const depenantCog of this.dependantCogs) {
@@ -53,11 +57,11 @@ class Cog {
 		}
 	}
 
-	addDependantCog(cog) {
+	addDependantElement(cog) {
 		this.dependantCogs.push(cog);
 	}
 
-	addCogSameRotator(cog) {
+	addSameRotator(cog) {
 		this.sameRotatorCogs.push(cog);
 	}
 }
@@ -126,34 +130,3 @@ class Point {
 	}
 }
 
-//class Vector extends Point {
-//	constructor(x, y) {
-//		super(x, y);
-//	}
-//
-//	normalize() {
-//		const vecLen = this.len();
-//		this.x = this.x / vecLen;
-//		this.y = this.y / vecLen;
-//
-//		return this;
-//	}
-//
-//	mul(howMuch) {
-//		this.x *= howMuch;
-//		this.y *= howMuch;
-//
-//		return this;
-//	}
-//
-//	len() {
-//		return Math.sqrt(this.x * this.x + this.y * this.y);
-//	}
-//}
-//
-//function addVec2Point(p, v) {
-//	return new Point(
-//		p.x + v.x,
-//		p.y + v.y
-//	);
-//}

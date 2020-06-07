@@ -13,23 +13,54 @@ function setCogAtAngle(cog1, cog2, angle) {
 /**
  * Sets cog2 above cog1
  **/ 
-function setCogAbove(cog1, cog2) {
+function setCogAbove(cog1, cog2, gapWidth) {
 	cog2.position = {
 		x: cog1.position.x,
 		y: cog1.position.y,
-		z: cog1.position.z + COG_HEIGHT
+		z: cog1.position.z + COG_HEIGHT + (gapWidth || 0)
 	};
 }
 
 /**
  * Sets cog2 below cog1
  **/ 
-function setCogBelow(cog1, cog2) {
+function setCogBelow(cog1, cog2, gapWidth) {
 	cog2.position = {
 		x: cog1.position.x,
 		y: cog1.position.y,
-		z: cog1.position.z - COG_HEIGHT
+		z: cog1.position.z - COG_HEIGHT - (gapWidth || 0)
 	};
+}
+
+function setConnectorAbove(cog, connector) {
+	connector.position.x = cog.position.x;
+	connector.position.y = cog.position.y;
+	connector.position.z = cog.position.z + COG_HEIGHT;
+}
+
+function setConnectorBelow(cog, connector) {
+	connector.position.x = cog.position.x;
+	connector.position.y = cog.position.y;
+	connector.position.z =
+		cog.position.z - connector.geometry.parameters.height;
+}
+
+function setPointerAboveConnector(connector, pointer) {
+	pointer.position.x = connector.position.x;
+	pointer.position.y = connector.position.y;
+	pointer.position.z = connector.position.z + connector.geometry.parameters.height;
+}
+
+function setAt(mesh1, mesh2) {
+	mesh2.position.x = mesh1.position.x;
+	mesh2.position.y = mesh1.position.y;
+	mesh2.position.z = mesh1.position.z;
+}
+
+function setSphereAtConnector(connector, sphere) {
+	sphere.position.x = connector.position.x;
+	sphere.position.y = connector.position.y;
+	sphere.position.z = connector.position.z + connector.geometry.parameters.height;
 }
 
 function setCogPositionAtAngle(cog1, cog2, angle) {
