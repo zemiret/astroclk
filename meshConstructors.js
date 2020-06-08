@@ -7,7 +7,7 @@ let metalicMaterial;
 		color: 0x000000,
 		specular: 0x444444,
 		shininess: 20,
-		normalMap: textureLoader.load('/assets/Metal007_2K_Normal.jpg'),
+		normalMap: textureLoader.load('assets/Metal007_2K_Normal.jpg'),
 		normalScale: new THREE.Vector2(3, 3),
 	});
 })();
@@ -157,12 +157,7 @@ function createPointerMesh(length, radius, height) {
 
 	const cylinderHeight = height * 1.2;
 	const holdGeometry = new THREE.CylinderBufferGeometry(radius, radius, cylinderHeight, 32);
-	const holdMaterial = new THREE.MeshPhongMaterial({
-		color: 0x000000,
-		specular: 0x444444,
-		shininess: 20,
-		normalMap: textureLoader.load('/assets/Metal007_2K_Normal.jpg'),
-	});
+	const holdMaterial = metalicMaterial;
 	const holdMesh = new THREE.Mesh(holdGeometry, holdMaterial);
 	holdMesh.castShadow = true;
 	holdMesh.receiveShadow = true;
