@@ -1,3 +1,17 @@
+let metalicMaterial;
+
+(function loadGlobalMaterials() {
+	const textureLoader = new THREE.TextureLoader();
+
+	metalicMaterial = new THREE.MeshPhongMaterial({
+		color: 0x000000,
+		specular: 0x444444,
+		shininess: 20,
+		normalMap: textureLoader.load('/assets/Metal007_2K_Normal.jpg'),
+		normalScale: new THREE.Vector2(3, 3),
+	});
+})();
+
 function createCogMesh(cog) {
 	const shape = new THREE.Shape();
 	shape.moveTo(cog.innerRadius, 0);
@@ -42,22 +56,32 @@ function createCogMesh(cog) {
 	}
 
 	const geometry = new THREE.ExtrudeGeometry(shape, COG_EXTRUDE_SETTINGS);
+
+	const textureLoader = new THREE.TextureLoader();
+	const texture = textureLoader.load("assets/Wood034_2K_Color.jpg");
+	texture.repeat.set(0.02, 0.02);
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+
 	const material = new THREE.MeshPhongMaterial({
-		color: 0xff0000,
-		flatShading: true,
+		map: texture,
 	});
 
 	const edges = new THREE.EdgesGeometry(geometry);
-//	const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
-
 	const mesh = new THREE.Mesh(geometry, material) ;
+
+	mesh.receiveShadow = true;
+	mesh.castShadow = true;
 
 	cog.mesh = new CogMesh(mesh);
 }
 
 function createConnectorMesh(radius, height) {
 	const geometry = new THREE.CylinderBufferGeometry(radius, radius, height, 32);
-	const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+
+	const textureLoader = new THREE.TextureLoader();
+	const material = metalicMaterial;
+
 	const cylinder = new THREE.Mesh(geometry, material);
 
 	cylinder.rotation.x = Math.PI / 2;
@@ -96,9 +120,12 @@ function createArmMesh(length, height, endShape) {
 	};
 
 	const path = new ArmCurve(length, height);
-	const geometry = new THREE.TubeGeometry(path, 32, 0.1, 8, false );
-	const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+	const geometry = new THREE.TubeGeometry(path, 32, 0.3, 8, false );
+
+	const material = metalicMaterial;
 	const mesh = new THREE.Mesh( geometry, material );
+	mesh.castShadow = true;
+	mesh.receiveShadow = true;
 
 	const group = new THREE.Group();
 	group.add(mesh);
@@ -126,10 +153,19 @@ function createArmMesh(length, height, endShape) {
 function createPointerMesh(length, radius, height) {
 	height = height || POINTER_HEIGHT; 
 
+	const textureLoader = new THREE.TextureLoader;
+
 	const cylinderHeight = height * 1.2;
 	const holdGeometry = new THREE.CylinderBufferGeometry(radius, radius, cylinderHeight, 32);
-	const holdMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+	const holdMaterial = new THREE.MeshPhongMaterial({
+		color: 0x000000,
+		specular: 0x444444,
+		shininess: 20,
+		normalMap: textureLoader.load('/assets/Metal007_2K_Normal.jpg'),
+	});
 	const holdMesh = new THREE.Mesh(holdGeometry, holdMaterial);
+	holdMesh.castShadow = true;
+	holdMesh.receiveShadow = true;
 
 	const stopX = length * 0.6;
 	const width = radius * 1.4;
@@ -150,12 +186,18 @@ function createPointerMesh(length, radius, height) {
 	shape.lineTo(p6.x, p6.y);
 
 	const geometry = new THREE.ExtrudeGeometry(shape, POINTER_EXTRUDE_SETTINGS);
+	const texture = textureLoader.load("assets/Wood026_2K_Color.jpg")
+	texture.repeat.set(0.05, 0.05);
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+
 	const material = new THREE.MeshPhongMaterial({
-		color: 0x00ff00,
-		flatShading: true,
+		map: texture,
 	});
 	
 	const mesh = new THREE.Mesh(geometry, material);
+	mesh.castShadow = true;
+	mesh.receiveShadow = true;
 
 	holdMesh.rotation.x = Math.PI / 2;
 	holdMesh.position.z = cylinderHeight / 2;

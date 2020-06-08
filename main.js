@@ -6,34 +6,46 @@ function init() {
 	// create a scene, that will hold all our elements such as objects, cameras and lights.
 	scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-	camera.position.z = 120;
 
 	// create a render and set the size
-	renderer = new THREE.WebGLRenderer();
+	renderer = new THREE.WebGLRenderer({alpha: true});
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFShadowMap;
 	renderer.setSize(window.innerWidth, window.innerHeight);
 
 	const ctr = new THREE.OrbitControls(camera, renderer.domElement);
-	const axesHelper = new THREE.AxesHelper( 5000 );
-	scene.add( axesHelper );
 
-	const ambiColor = "#0c0c0c";
-	const ambientLight = new THREE.AmbientLight(ambiColor);
+	camera.position.set(0, 0, 80);
+	ctr.update();
+
+	const ambiColor = "#6778CE";
+	const ambientLight = new THREE.AmbientLight(ambiColor, 0.5);
 	scene.add(ambientLight);
 
-	const spotLight = new THREE.SpotLight(0xffffff);
-	spotLight.position.set(0, 300, 120);
-	spotLight.angle = Math.PI * 25 / 180;
-	scene.add(spotLight);
+	const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+	directionalLight.position.x = directionalLight.position.y = 0;
+	directionalLight.position.z = 1000;
+	scene.add(directionalLight);
 
-	const spotLight2 = new THREE.SpotLight(0xffffff);
-	spotLight2.position.set(0, -300, 120);
-	spotLight2.angle = Math.PI * 25 / 180;
-	scene.add(spotLight2);
+	const underSpotLight = new THREE.SpotLight(0xffffff, 0.8);
+	underSpotLight.position.x = underSpotLight.position.y = 0;
+	underSpotLight.position.z = -100;
+	scene.add(underSpotLight);
 
-	const spotLight3 = new THREE.SpotLight(0xffffff);
-	spotLight3.position.set(0, -100, -120);
-	spotLight3.angle = Math.PI * 25 / 180;
-	scene.add(spotLight3);
+	const helperSpotLight = new THREE.SpotLight(0xffffff, 0.2);
+	helperSpotLight.position.y = 0;
+	helperSpotLight.position.x = 50;
+	helperSpotLight.position.z = 150;
+	helperSpotLight.rotation.x = Math.PI / 4;
+
+	helperSpotLight.castShadow = true;
+	helperSpotLight.shadow = new THREE.LightShadow(
+		new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+	);
+	helperSpotLight.shadow.mapSize.width = 2048 * 8;
+	helperSpotLight.shadow.mapSize.height = 2048 * 8;
+	
+	scene.add(helperSpotLight);
 
 	document.body.appendChild( renderer.domElement );
 }
@@ -76,14 +88,10 @@ function addConnectorBetween(from_cog, to_cog) {
 
 init();
 
+const textureLoader = new THREE.TextureLoader;
+
 const masterCog = addCogWithMesh(8, 1);
-
-// TODO: Cog framework working. Great! Next steps:
-// DONE (I guess) 1. Work on additional elements (planets, dials, make them work smoothly as well)
-// DONE 2. Design normal clock, and sun+earth
-// 3. textures, nice looks, and nice background
-// 4. Synchronizing clock to the current date
-
+masterCog.position = { y: -20 };
 
 // --- REGULAR CLOCK ---
 
@@ -207,12 +215,34 @@ setConnectorAbove(astro584_1rpy, sunConnector);
 scene.add(sunConnector);
 astro584_1rpy.addSameRotator(sunConnector);
 
-const sun = createSphereMesh(4);
+
+const sunTexture = textureLoader.load("assets/2k_sun.jpg");
+const sun = createSphereMesh(4, new THREE.MeshPhongMaterial({
+	map: sunTexture,
+    emissive: 0xffffee,
+    emissiveIntensity: 0.2,
+}));
 scene.add(sun);
 setSphereAtConnector(sunConnector, sun);
 astro584_1rpy.addSameRotator(sun);
 
-const earth = createSphereMesh(2);
+const sunPointLight = new THREE.PointLight(0xffffff, 1, 200);
+sunPointLight.position.x = sun.position.x;
+sunPointLight.position.y = sun.position.y;
+sunPointLight.position.z = sun.position.z;
+
+sunPointLight.castShadow = true;
+sunPointLight.shadow.mapSize.width = 2048 * 4;
+sunPointLight.shadow.mapSize.height = 2048 * 4;
+
+scene.add(sunPointLight);
+
+const earthTexture = textureLoader.load("assets/earthmap1k.jpg");
+const earthBumpmap = textureLoader.load("assets/earthbump1k.jpg");
+const earth = createSphereMesh(2, new THREE.MeshPhongMaterial({
+	map: earthTexture,
+	bumpMap: earthBumpmap,
+}));
 const earthArm = createArmMesh(astro584_1rpy.innerRadius, 3, earth);
 scene.add(earthArm);
 setAt(sunConnector, earthArm);
@@ -226,7 +256,6 @@ function start() {
 	let lastT;
 
 	function render(t) {
-		// render using requestAnimationFrame
 		if (start === undefined) {
 			start = t;
 			lastT = t;
@@ -237,6 +266,7 @@ function start() {
 		lastT = t;
 		
 		masterCog.update(-MASTER_INTERVAL_1MS_ANGLE_UPDATE * diff);
+//		masterCog.update(- diff);
 
 		requestAnimationFrame(render);
 		renderer.render(scene, camera);
@@ -245,5 +275,36 @@ function start() {
 	requestAnimationFrame(render);
 }
 
+Date.prototype.isLeapYear = function() {
+    var year = this.getFullYear();
+    if((year & 3) != 0) return false;
+    return ((year % 100) != 0 || (year % 400) == 0);
+};
+
+Date.prototype.getDOY = function() {
+    var dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    var mn = this.getMonth();
+    var dn = this.getDate();
+    var dayOfYear = dayCount[mn] + dn;
+    if(mn > 1 && this.isLeapYear()) dayOfYear++;
+    return dayOfYear;
+};
+
+function synchronize() {
+	const now = new Date();
+	const seconds = now.getSeconds();
+	const minutes = now.getMinutes();
+	let hours = now.getHours();
+	hours = hours < 12 ? hours : hour - 12;
+	const day = now.getDOY();
+
+	secondPointer.rotation.z = Math.PI/2 - 2 * Math.PI * seconds / 60;
+	minutePointer.rotation.z = Math.PI/2 - 2 * Math.PI * minutes / 60 + (-2 * Math.PI / 60 * seconds / 60);
+	hourPointer.rotation.z = Math.PI/2 - 2 * Math.PI * hours / 12 + (-2 * Math.PI / 12 * minutes / 60);
+
+	earthArm.rotation.z = 2 * Math.PI * day / (now.isLeapYear() ? 366 : 365);
+}
+
+synchronize();
 start();
 
