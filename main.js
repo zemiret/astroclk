@@ -295,7 +295,7 @@ function synchronize() {
 	const seconds = now.getSeconds();
 	const minutes = now.getMinutes();
 	let hours = now.getHours();
-	hours = hours < 12 ? hours : hour - 12;
+	hours = hours < 12 ? hours : hours - 12;
 	const day = now.getDOY();
 
 	secondPointer.rotation.z = Math.PI/2 - 2 * Math.PI * seconds / 60;
